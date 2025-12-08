@@ -16,6 +16,7 @@ public interface VistaJuego {
     void mostrarEnemigos(Enemigo[] enemigo);
     void mostrarVictoria();
     void mostrarDerrota();
+    
 
     void esperarEnter();
     

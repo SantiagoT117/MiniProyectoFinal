@@ -7,10 +7,7 @@ import javax.swing.*;
 
 import controlador.ControladorBatalla;
 
-
-
 import java.awt.event.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +31,9 @@ public class VistaGUI extends JFrame implements VistaJuego{
     
     private JButton btnatacar;
     private JButton btnhabilidad;
+    private JButton btnGuardar;
+    // se añaden los botones de guardar y cargar partida
+    private JButton btnCargar;
     private JPanel panelEstado;
     private JTextArea areaLog;
     
@@ -98,9 +98,13 @@ public class VistaGUI extends JFrame implements VistaJuego{
 
                 btnatacar = new JButton("Atacar");
                 btnhabilidad = new JButton("Habilidad");
+                btnGuardar = new JButton("Guardar");
+                btnCargar = new JButton("Cargar");
 
                 panelBotones.add(btnatacar);
                 panelBotones.add(btnhabilidad);
+                panelBotones.add(btnGuardar);
+                panelBotones.add(btnCargar);
 
                 add(panelBotones, BorderLayout.SOUTH);
 
@@ -110,11 +114,11 @@ public class VistaGUI extends JFrame implements VistaJuego{
 
                 btnatacar.addActionListener(e -> elegir(1));
                 btnhabilidad.addActionListener(e -> elegir(2));
+                // llama los actionlistener con los botones nuevos 
+                btnGuardar.addActionListener(e -> controlador.guardarpartida());
+                btnCargar.addActionListener(e -> controlador.cargarpartida());
 
                 setVisible(true);
-
-                btnVolverMenu = new JButton("Salir");
-                btnVolverMenu.addActionListener(e -> dispose());
 
                 JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
                 bottom.add(btnVolverMenu);
@@ -280,16 +284,30 @@ public class VistaGUI extends JFrame implements VistaJuego{
 
     @Override
     public void mostrarHeroes(Heroe[] heroe) {
+
+        barrasHeroes.clear();
+        hpMaxHeroes.clear();
+
         panelHeroes.removeAll();
         for(Heroe h : heroe){
+            hpMaxHeroes.put(h, h.getHp());
             panelHeroes.add(generarHeroe(h));
         }
+
+        panelHeroes.revalidate();
+        panelHeroes.repaint();
     }
 
     @Override
     public void mostrarEnemigos(Enemigo[] enemigo) {
+        barrasEnemigos.clear();
+        hpMaxEnemigos.clear();
+
         panelEnemigos.removeAll();
+
         for(int i = 0 ; i < enemigo.length; i++){
+            Enemigo e = enemigo[i];
+            hpMaxEnemigos.put(e, e.getHp());
             panelEnemigos.add(generarEnemigo(enemigo[i], i));
         }
 
@@ -363,7 +381,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
     @Override
     public void iniciar(ControladorBatalla ctrl) {
         this.controlador = ctrl;
-        frame.setVisible(true);
+        setVisible(true);
     }
 
 

@@ -41,11 +41,14 @@ public class VistaTerminal implements VistaJuego {
         sc.nextLine();
     }
 
+    // se añadieron las nuevas opciones guardar y cargar partida
     @Override
     public int elegirAccion(Heroe heroe) {
         System.out.println("Elige una accion para " + heroe.getNombre() +"\n");
         System.out.println("1. Atacar\n");
         System.out.println("2. Habilidad");
+        System.out.println("3.guardar partida");
+        System.out.println("4.cargar partida");
         return leerEntero();
     }
 

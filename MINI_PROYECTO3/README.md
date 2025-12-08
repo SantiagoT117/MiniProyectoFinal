@@ -11,3 +11,8 @@ Primeramente están los modelos, los cuales se limpiaron para que retornaran mas
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 Implementacion de los try catch en partes del codgio necesarias. para aquellas partes las cuales le piden al usuario digitar opciones se hizo uso de try catch para que en dado caso que el usuario ponga datos no correspondinetes no se rompa el codgio, estos try catch estan hubicados en la vistaTerminal en la funcion leerEntero, en el controladorBatalla en la funcion turnoHeroe y el ultimo esta en el App el cual captura si es que el usuario pone mal los datos a la hora de esocger si desea su juego via terminal o GUI, mas adelante se pondran mas try catch en cuanto este la funcion de inventario la cual muy posiblemente tambien ocupe capturar errores
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Se implemento las opciones de guardado y carga de partida esto se hizo gracias al bufferedwriter y el bufferedreader el cual usa como intermediario un filewriter y filereader el cual se encarga de crear el archivo save.txt en el cual se guarda la partida, se hizieron cambios en algunas clases para que todo funcione bien y a la perfeccion, mas sin embargo se posee un pequeño problema con el sistema de gaurdado y carga en la GUI ya que eset si guarda la partida pero este no actualiza las barras de vida una vez cargada la partida por lo que a simple vista no se puede ver si se cargo o no la partida, de resto lo demas funciona 

@@ -3,10 +3,12 @@ package modelo;
 public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
 
     private final Tipo_Heroe tipo;
+    private int hpMax;
 
     public Heroe(String nombre, Tipo_Heroe tipo, int hp, int mp, int ataque, int defensa, int velocidad) {
         super(nombre, hp, mp, ataque, defensa, velocidad);
         this.tipo = tipo;
+        this.hpMax = hp;
 
         // if (!tipo.validarAtributos(hp, mp, ataque, defensa)) {
         //     throw new IllegalArgumentException("Atributos fuera del rango para el tipo: " + tipo);
@@ -15,6 +17,14 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
 
     public Tipo_Heroe getTipo() {
         return tipo;
+    }
+
+    public int getHpMax(){
+        return hpMax;
+    }
+
+    public void setHpMax(int hpMax) {
+    this.hpMax = hpMax; 
     }
 
 
