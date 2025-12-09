@@ -1,6 +1,5 @@
-import java.util.Scanner;
-
 import controlador.ControladorBatalla;
+import java.util.Scanner;
 import modelo.Batalla;
 import modelo.Enemigo;
 import modelo.Heroe;
@@ -37,34 +36,35 @@ public class App {
 
         VistaJuego vista = null;
         
-        Scanner sc = new Scanner(System.in);
         int opcion = 0;
         
-        // Bucle para validar que el usuario elija una opción válida (1 o 2)
-        while (opcion != 1 && opcion != 2) {
-            try {
-                // Preguntamos al usuario si desea jugar por GUI o Terminal 
-                System.out.println("Bienvenido a Dragon Quest VIII");
-                System.out.println("1. Terminal");
-                System.out.println("2. GUI");
-                System.out.println("En que modo desea jugar?");
-                
-                String entrada = sc.nextLine();
-                
-                // Convertimos la entrada a número
-                opcion = Integer.parseInt(entrada);
-                
-                // Validamos que sea 1 o 2
-                if(opcion != 1 && opcion !=2){
-                    System.out.println("Opción inválida. Debes escoger 1 o 2.\n");
+        try (Scanner sc = new Scanner(System.in)) {
+            // Bucle para validar que el usuario elija una opción válida (1 o 2)
+            while (opcion != 1 && opcion != 2) {
+                try {
+                    // Preguntamos al usuario si desea jugar por GUI o Terminal 
+                    System.out.println("Bienvenido a Dragon Quest VIII");
+                    System.out.println("1. Terminal");
+                    System.out.println("2. GUI");
+                    System.out.println("En que modo desea jugar?");
+                    
+                    String entrada = sc.nextLine();
+                    
+                    // Convertimos la entrada a número
+                    opcion = Integer.parseInt(entrada);
+                    
+                    // Validamos que sea 1 o 2
+                    if(opcion != 1 && opcion !=2){
+                        System.out.println("Opción inválida. Debes escoger 1 o 2.\n");
+                    }
+                    
+                }catch(NumberFormatException e){
+                    // Capturamos errores de formato (NumberFormatException)
+                    System.out.println("Ingresa un número válido.");
+                    
                 }
                 
-            }catch(Exception e){
-                // Capturamos errores de formato (NumberFormatException)
-                System.out.println("Ingresa un número válido.");
-                
             }
-            
         }
         
         // Instanciamos la vista según la opción seleccionada

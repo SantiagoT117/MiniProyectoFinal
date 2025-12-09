@@ -2,7 +2,6 @@ package controlador;
 
 import java.io.IOException;
 import java.util.ArrayList;
-
 import modelo.*;
 import vista.*;
 
@@ -19,10 +18,11 @@ import vista.*;
  */
 public class ControladorBatalla{
     
-    private Batalla batalla;
+    private final Batalla batalla;
     private Heroe[] heroes;
     private Enemigo[] enemigos;
-    private VistaJuego vista;
+    private final VistaJuego vista;
+    @SuppressWarnings("unused")
     private Object[] ordenTurnos;
 
     /**
@@ -57,14 +57,10 @@ public class ControladorBatalla{
         ArrayList<Object> todos = new ArrayList<>();
 
         // Agregar todos los héroes
-        for (Heroe h : heroes){
-            todos.add(h);
-        }
+        todos.addAll(java.util.Arrays.asList(heroes));
 
         // Agregar todos los enemigos
-        for(Enemigo e : enemigos){
-            todos.add(e);
-        }
+        todos.addAll(java.util.Arrays.asList(enemigos));
 
         ArrayList<Object> orden = new ArrayList<>();
 
@@ -73,10 +69,12 @@ public class ControladorBatalla{
             Object masRapido = todos.get(0);
 
             for(Object o : todos){
+                if(o == null) continue;
 
                 // Obtener velocidad según el tipo de personaje
                 int velO = (o instanceof Heroe)? ((Heroe)o).getVelocidad() : ((Enemigo)o).getVelocidad();
 
+                if(masRapido == null) continue;
                 int velMR = (masRapido instanceof Heroe)? ((Heroe)masRapido).getVelocidad() : ((Enemigo)masRapido).getVelocidad(); 
                 
                 if(velO > velMR){
@@ -147,7 +145,7 @@ public class ControladorBatalla{
             // Delega en el modelo Batalla para guardar en save.txt
             batalla.guardarpartida("save.txt");
             vista.mostrarMensaje("Partida guardada con exito");
-        }catch(Exception e){
+        }catch(IOException e){
             // Muestra mensaje de error si falla el guardado
             vista.mostrarMensaje("Error al guardar" + e.getMessage());
         }
@@ -171,7 +169,7 @@ public class ControladorBatalla{
             vista.mostrarHeroes(this.heroes);
             vista.mostrarEnemigos(this.enemigos);
             vista.mostrarMensaje("Partida cargada exitosamente");
-        }catch(Exception e){
+        }catch(IOException e){
             // Muestra mensaje de error si falla la carga
             vista.mostrarMensaje("Error al cargar" + e.getMessage());
         }
@@ -198,43 +196,45 @@ public class ControladorBatalla{
         int accion = vista.elegirAccion(heroe);
 
         switch (accion) {
-            case 1: // Atacar
-            try { 
-                // Try-catch para verificar que se seleccione un enemigo válido
-                int idx = vista.seleccionarEnemigo(enemigos);
-                
-                // Validar que el índice esté en rango
-                if(idx < 0 || idx > enemigos.length){
-                    throw new IndexOutOfBoundsException();
+            case 1 -> {
+                // Atacar
+                try {
+                    // Try-catch para verificar que se seleccione un enemigo válido
+                    int idx = vista.seleccionarEnemigo(enemigos);
+                    
+                    // Validar que el índice esté en rango
+                    if(idx < 0 || idx > enemigos.length){
+                        throw new IndexOutOfBoundsException();
+                    }
+                    
+                    Enemigo objetivo = enemigos[idx];
+                    heroe.atacar(objetivo);
+                    
+                    vista.mostrarMensaje(heroe.getNombre() + " ataco a " + objetivo.getNombre());
+                    vista.actualizarBarras();
+                    
+                }catch (IndexOutOfBoundsException e){
+                    vista.mostrarMensaje("Opción inválida. Selecciona un enemigo existente");
+                    turnoHeroe(heroe); // Reintentar el turno
                 }
-                
-                Enemigo objetivo = enemigos[idx];
-                heroe.atacar(objetivo);
-
-                vista.mostrarMensaje(heroe.getNombre() + " ataco a " + objetivo.getNombre());
-                vista.actualizarBarras();
-
-            }catch (IndexOutOfBoundsException e){
-                vista.mostrarMensaje("Opción inválida. Selecciona un enemigo existente");
-                turnoHeroe(heroe); // Reintentar el turno
             }
-            break;
 
 
-            case 2: // Habilidad (no implementada)
+            case 2 -> // Habilidad (no implementada)
                 vista.mostrarMensaje("no esta implementada por temas de presupuesto");
-                break;
             
-            case 3: // Guardar partida
+            case 3 -> {
+                // Guardar partida
                 try {
                     batalla.guardarpartida("save.txt");
                     vista.mostrarMensaje("Partida guardada correctamente");
                 } catch (IOException e) {
                     vista.mostrarMensaje("Error al guardar la partida");
                 }
-                break;
+            }
 
-            case 4: // Cargar partida
+            case 4 -> {
+                // Cargar partida
                 try {
                     batalla.cargarpartida("save.txt");
                     vista.actualizarBarras();
@@ -243,12 +243,12 @@ public class ControladorBatalla{
                 } catch (IOException e) {
                     vista.mostrarMensaje("No se pudo cargar la partida");
                 }
-                break;
+            }
 
-            default:
+            default -> {
                 vista.mostrarMensaje("Opcion invalida");
                 turnoHeroe(heroe); // Reintentar el turno
-                break;
+            }
         }
     }
 

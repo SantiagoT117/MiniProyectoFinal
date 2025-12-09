@@ -55,7 +55,6 @@ public class JefeEnemigo extends Enemigo {
         if (daño < 1) daño = 1;
 
         objetivo.recibir_daño(daño);
-        return;
     }
 
     /**
@@ -73,7 +72,7 @@ public class JefeEnemigo extends Enemigo {
     @Override
     public void AtacarATodos() {
         // Daño base multiplicado por 2 para ataque de área (ejemplo)
+        @SuppressWarnings("unused")
         int daño = this.getAtaque() * 2;
-        return;
     }
 }
