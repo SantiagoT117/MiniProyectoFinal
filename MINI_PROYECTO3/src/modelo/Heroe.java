@@ -1,5 +1,8 @@
 package modelo;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Clase que representa a un héroe jugable en el juego.
  * Extiende de Personaje e implementa las interfaces Sanador, Tanque y Hechicero,
@@ -18,6 +21,7 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
 
     private final Tipo_Heroe tipo;  // Tipo de héroe (define sus habilidades disponibles)
     private int hpMax;              // HP máximo para cálculos de curación y barras de progreso
+    private final Map<String, Integer> inventario = new HashMap<>(); // Inventario de objetos
 
     /**
      * Constructor del héroe.
@@ -48,6 +52,50 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
         this.hpMax = hpMax; 
     }
 
+    // ==================== INVENTARIO ====================
+
+    /**
+     * Añade un objeto al inventario. Si ya existe, suma la cantidad.
+     * @param nombreObjeto Nombre del objeto
+     * @param cantidad Cantidad a añadir
+     */
+    public void agregarObjeto(String nombreObjeto, int cantidad) {
+        inventario.put(nombreObjeto, inventario.getOrDefault(nombreObjeto, 0) + cantidad);
+    }
+
+    /**
+     * Quita una cantidad de un objeto del inventario. Si la cantidad llega a 0 o menos, elimina el objeto.
+     * @param nombreObjeto Nombre del objeto
+     * @param cantidad Cantidad a quitar
+     * @return true si se pudo quitar, false si no hay suficiente cantidad
+     */
+    public boolean quitarObjeto(String nombreObjeto, int cantidad) {
+        int actual = inventario.getOrDefault(nombreObjeto, 0);
+        if (actual < cantidad) return false;
+        if (actual == cantidad) {
+            inventario.remove(nombreObjeto);
+        } else {
+            inventario.put(nombreObjeto, actual - cantidad);
+        }
+        return true;
+    }
+
+    /**
+     * Obtiene la cantidad de un objeto en el inventario.
+     * @param nombreObjeto Nombre del objeto
+     * @return Cantidad disponible (0 si no existe)
+     */
+    public int consultarObjeto(String nombreObjeto) {
+        return inventario.getOrDefault(nombreObjeto, 0);
+    }
+
+    /**
+     * Devuelve el inventario completo.
+     * @return Mapa con los objetos y sus cantidades
+     */
+    public Map<String, Integer> getInventario() {
+        return inventario;
+    }
 
     // ==================== HABILIDADES DE TANQUE (Guerrero/Paladín) ====================
 

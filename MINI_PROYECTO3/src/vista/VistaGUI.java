@@ -1,15 +1,12 @@
 package vista;
 
-import modelo.*;
-import java.awt.*;
-
-import javax.swing.*;
-
 import controlador.ControladorBatalla;
-
+import java.awt.*;
 import java.awt.event.*;
 import java.util.HashMap;
 import java.util.Map;
+import javax.swing.*;
+import modelo.*;
 
 /**
  * Implementación de la vista con interfaz gráfica de usuario (GUI).
@@ -35,30 +32,32 @@ public class VistaGUI extends JFrame implements VistaJuego{
     private ControladorBatalla controlador;
 
     // Mapas para rastrear HP máximo y barras de progreso de cada personaje
-    private Map<Heroe, Integer> hpMaxHeroes = new HashMap<>();
-    private Map<Enemigo, Integer> hpMaxEnemigos = new HashMap<>();
-    private Map<Heroe, JProgressBar> barrasHeroes = new HashMap<>();
-    private Map<Enemigo, JProgressBar> barrasEnemigos = new HashMap<>();
+    private final Map<Heroe, Integer> hpMaxHeroes = new HashMap<>();
+    private final Map<Enemigo, Integer> hpMaxEnemigos = new HashMap<>();
+    private final Map<Heroe, JProgressBar> barrasHeroes;
+    private final Map<Enemigo, JProgressBar> barrasEnemigos = new HashMap<>();
 
     // Paneles y componentes de la interfaz
     private JPanel panelHeroes;
     private JPanel panelEnemigos;
-    private JTextArea salida;
-    private JScrollPane scroll;
+    private final JTextArea salida;
+    private final JScrollPane scroll;
     
     // Botones de acción
     private JButton btnatacar;
     private JButton btnhabilidad;
-    private JButton btnGuardar;
-    private JButton btnCargar;
-    private JPanel panelEstado;
-    private JTextArea areaLog;
+    private final JButton btnInventario;
+    private final JButton btnGuardar;
+    private final JButton btnCargar;
+    private final JPanel panelEstado;
+    private final JTextArea areaLog;
     
-    private JButton btnVolverMenu;
+    private final JButton btnVolverMenu;
     
     // Variables para manejar la selección del usuario
     private int accionElegida = -1;
     private int enemigoElegido = -1;
+    private Heroe heroeActual = null;
 
     // Locks para sincronizar la interacción del usuario con la lógica del juego
     private final Object lockAccion = new Object();
@@ -70,6 +69,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
      * y establece los listeners para los botones.
      */
     public VistaGUI(){
+        this.barrasHeroes = new HashMap<>();
 
         // Configuración de la ventana principal
         setTitle("Dragon Quest VIII");
@@ -100,7 +100,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
                 areaLog.setBackground(new Color(12, 12, 18));
                 areaLog.setForeground(Color.WHITE);
 
-                JScrollPane scroll = new JScrollPane(areaLog);
+                scroll = new JScrollPane(areaLog);
                 scroll.setPreferredSize(new Dimension(400, 200));
 
                 add(scroll, BorderLayout.EAST);
@@ -123,11 +123,13 @@ public class VistaGUI extends JFrame implements VistaJuego{
 
                 btnatacar = new JButton("Atacar");
                 btnhabilidad = new JButton("Habilidad");
+                btnInventario = new JButton("Inventario");
                 btnGuardar = new JButton("Guardar");
                 btnCargar = new JButton("Cargar");
 
                 panelBotones.add(btnatacar);
                 panelBotones.add(btnhabilidad);
+                panelBotones.add(btnInventario);
                 panelBotones.add(btnGuardar);
                 panelBotones.add(btnCargar);
 
@@ -139,6 +141,13 @@ public class VistaGUI extends JFrame implements VistaJuego{
 
                 btnatacar.addActionListener(e -> elegir(1));
                 btnhabilidad.addActionListener(e -> elegir(2));
+                btnInventario.addActionListener(e -> {
+                    if (heroeActual != null) {
+                        mostrarInventario(heroeActual);
+                    } else {
+                        mostrarMensaje("No hay un héroe seleccionado actualmente.");
+                    }
+                });
                 // llama los actionlistener con los botones nuevos 
                 btnGuardar.addActionListener(e -> controlador.guardarpartida());
                 btnCargar.addActionListener(e -> controlador.cargarpartida());
@@ -157,6 +166,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
     }
 
     // crea el panel heroes mas no lo muestra
+    @SuppressWarnings("unused")
     private void crearPanelHeroes(Heroe h){
 
         panelHeroes = new JPanel();
@@ -192,6 +202,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
         return card;
     }
 
+    @SuppressWarnings("unused")
     private void crearPanelEnemigos(Enemigo e){
 
         panelEnemigos = new JPanel();
@@ -242,6 +253,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
     }
 
     // funcion que actualiza las barras segun la vida del personaje 
+    @Override
     public void actualizarBarras(){
         for (Heroe h : barrasHeroes.keySet()){
             barrasHeroes.get(h).setValue(h.getHp());
@@ -254,18 +266,8 @@ public class VistaGUI extends JFrame implements VistaJuego{
 
 
 
-    private void crearPanelLog(){
-        areaLog = new JTextArea();
-        areaLog.setEditable(false);
-        areaLog.setFont(new Font("Consolas", Font.PLAIN, 14));
-        areaLog.setBackground(new Color(20,20,20));
-        areaLog.setForeground(Color.GREEN);
 
-        scroll = new JScrollPane(areaLog);
-
-        frame.add(scroll, BorderLayout.CENTER);
-    }
-
+    @SuppressWarnings("unused")
     private void crearPanelBotones(){
         JPanel panel = new JPanel();
 
@@ -276,7 +278,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
         btnhabilidad.setFont(new Font("Arial", Font.BOLD, 18));
 
         btnatacar.addActionListener(e -> elegir(1));
-        btnhabilidad.addActionListener(e -> elegir(2));;
+        btnhabilidad.addActionListener(e -> elegir(2));
 
         panel.add(btnatacar);
         panel.add(btnhabilidad);
@@ -358,6 +360,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
 
     @Override
     public int elegirAccion(Heroe heroe) {
+        this.heroeActual = heroe;
         mostrarMensaje("Tunrno de " + heroe.getNombre());
 
         accionElegida = -1;
@@ -407,6 +410,104 @@ public class VistaGUI extends JFrame implements VistaJuego{
     public void iniciar(ControladorBatalla ctrl) {
         this.controlador = ctrl;
         setVisible(true);
+    }
+
+    /**
+     * Muestra el inventario de un héroe en una ventana emergente.
+     * @param heroe Héroe cuyo inventario se va a mostrar
+     */
+    public void mostrarInventario(Heroe heroe) {
+        Map<String, Integer> inventario = heroe.getInventario();
+        
+        if (inventario.isEmpty()) {
+            JOptionPane.showMessageDialog(this, 
+                "El inventario de " + heroe.getNombre() + " está vacío.",
+                "Inventario", 
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Crear ventana de inventario
+        JDialog dialogInventario = new JDialog(this, "Inventario de " + heroe.getNombre(), true);
+        dialogInventario.setSize(400, 300);
+        dialogInventario.setLocationRelativeTo(this);
+        dialogInventario.setLayout(new BorderLayout());
+
+        // Panel con la lista de objetos
+        JPanel panelLista = new JPanel();
+        panelLista.setLayout(new BoxLayout(panelLista, BoxLayout.Y_AXIS));
+        panelLista.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        for (Map.Entry<String, Integer> entry : inventario.entrySet()) {
+            JPanel itemPanel = new JPanel(new BorderLayout());
+            itemPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+            
+            JLabel lblObjeto = new JLabel(entry.getKey() + ": " + entry.getValue());
+            lblObjeto.setFont(new Font("Arial", Font.PLAIN, 14));
+            
+            JButton btnUsar = new JButton("Usar");
+            btnUsar.addActionListener(e -> {
+                usarObjeto(heroe, entry.getKey());
+                dialogInventario.dispose();
+                // Reabrir el inventario para mostrar la cantidad actualizada
+                SwingUtilities.invokeLater(() -> mostrarInventario(heroe));
+            });
+            
+            itemPanel.add(lblObjeto, BorderLayout.CENTER);
+            itemPanel.add(btnUsar, BorderLayout.EAST);
+            
+            panelLista.add(itemPanel);
+        }
+
+        JScrollPane scrollPane = new JScrollPane(panelLista);
+        dialogInventario.add(scrollPane, BorderLayout.CENTER);
+
+        JButton btnCerrar = new JButton("Cerrar");
+        btnCerrar.addActionListener(e -> dialogInventario.dispose());
+        
+        JPanel panelBoton = new JPanel();
+        panelBoton.add(btnCerrar);
+        dialogInventario.add(panelBoton, BorderLayout.SOUTH);
+
+        dialogInventario.setVisible(true);
+    }
+
+    /**
+     * Usa un objeto del inventario del héroe.
+     * @param heroe Héroe que usa el objeto
+     * @param nombreObjeto Nombre del objeto a usar
+     */
+    private void usarObjeto(Heroe heroe, String nombreObjeto) {
+        if (heroe.quitarObjeto(nombreObjeto, 1)) {
+            // Aplicar efecto según el objeto
+            switch (nombreObjeto.toLowerCase()) {
+                case "poción de vida", "pocion de vida" -> {
+                    heroe.setHp(Math.min(heroe.getHp() + 50, heroe.getHpMax()));
+                    mostrarMensaje(heroe.getNombre() + " usó " + nombreObjeto + " y recuperó 50 HP.");
+                }
+                case "poción de maná", "pocion de mana" -> {
+                    heroe.setMp(heroe.getMp() + 30);
+                    mostrarMensaje(heroe.getNombre() + " usó " + nombreObjeto + " y recuperó 30 MP.");
+                }
+                case "antídoto", "antidoto" -> {
+                    heroe.limpiarEfectos();
+                    mostrarMensaje(heroe.getNombre() + " usó " + nombreObjeto + " y eliminó efectos negativos.");
+                }
+                case "elixir" -> {
+                    heroe.setHp(heroe.getHpMax());
+                    heroe.setMp(100);
+                    mostrarMensaje(heroe.getNombre() + " usó " + nombreObjeto + " y restauró toda su HP y MP.");
+                }
+                case "éter", "eter" -> {
+                    heroe.setMp(heroe.getMp() + 50);
+                    mostrarMensaje(heroe.getNombre() + " usó " + nombreObjeto + " y recuperó 50 MP.");
+                }
+                default -> mostrarMensaje(heroe.getNombre() + " usó " + nombreObjeto + ".");
+            }
+            actualizarBarras();
+        } else {
+            mostrarMensaje("No tienes suficientes " + nombreObjeto + ".");
+        }
     }
 
 
