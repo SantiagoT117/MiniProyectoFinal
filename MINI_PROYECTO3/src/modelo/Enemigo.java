@@ -46,10 +46,6 @@ public class Enemigo extends Personaje implements Agresivo, Jefe {
         return tipo;
     }
 
-    // @Override
-    // public void elegirAccion() {
-    //     // 
-    // }
 
     // Implementación que respeta las interfaces (void) 
     // ya que en la clase Agresivo.java estamos manejando datos void, se crearon 2 versiones de las acciones, una que respeta el void 

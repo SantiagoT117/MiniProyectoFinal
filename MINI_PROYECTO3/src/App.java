@@ -68,6 +68,10 @@ public class App {
         Batalla batalla = new Batalla(heroes, enemigos);
         ControladorBatalla controlador = new ControladorBatalla(batalla, heroes, enemigos, vista);
         
+<<<<<<< Updated upstream
+=======
+        // Inicialización y comienzo de la batalla
+>>>>>>> Stashed changes
         controlador.iniciar();
         controlador.iniciarBatalla();
     }
