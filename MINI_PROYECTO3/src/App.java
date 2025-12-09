@@ -3,6 +3,7 @@ import java.util.Scanner;
 import controlador.ControladorBatalla;
 import modelo.Batalla;
 import modelo.Enemigo;
+import modelo.GestorObjetos;
 import modelo.Heroe;
 import modelo.Tipo_Enemigo;
 import modelo.Tipo_Heroe;
@@ -83,6 +84,11 @@ public class App {
             new Heroe("Hero", Tipo_Heroe.GUERRERO, 40, 5, 20, 35, 25),
             new Heroe("Jessica", Tipo_Heroe.GUERRERO, 40, 5, 20, 35, 25),
         };
+        
+        // Equipar a los héroes con sus items iniciales
+        for (Heroe heroe : heroes) {
+            GestorObjetos.equiparHeroeInicial(heroe);
+        }
         
         // Creación del equipo de enemigos con diferentes tipos
         // Parámetros: nombre, hp, mp, ataque, defensa, velocidad, tipo

@@ -91,6 +91,7 @@ public class VistaTerminal implements VistaJuego {
         System.out.println("2. Habilidad");
         System.out.println("3. Guardar partida");
         System.out.println("4. Cargar partida");
+        System.out.println("5. Usar Item");
         System.out.println("9. ⟳ Rehacer acción deshecha");
         System.out.println("========================================");
         return leerEntero();
@@ -225,6 +226,77 @@ public class VistaTerminal implements VistaJuego {
         for ( Enemigo e : enemigo){
             System.out.println(e.getNombre() + " - " + e.getTipo() + "\n");
         }  
+    }
+
+    /**
+     * Muestra el inventario del héroe con todos sus items y cantidades.
+     * 
+     * @param heroe Héroe cuyo inventario se mostrará
+     */
+    @Override
+    public void mostrarInventario(Heroe heroe) {
+        System.out.println("\n========================================");
+        System.out.println(" INVENTARIO DE " + heroe.getNombre().toUpperCase());
+        System.out.println("========================================");
+        
+        Inventario inv = heroe.getInventario();
+        
+        if (inv.obtenerEspacios() == 0) {
+            System.out.println("  ✗ Inventario vacío");
+        } else {
+            int contador = 1;
+            for (String nombreItem : inv.obtenerItems()) {
+                int cantidad = inv.obtenerCantidad(nombreItem);
+                System.out.println("  " + contador + ". " + nombreItem + " x" + cantidad);
+                contador++;
+            }
+            System.out.println("\n  Espacios usados: " + inv.obtenerEspacios() + "/5");
+        }
+        System.out.println("========================================");
+    }
+
+    /**
+     * Permite al jugador seleccionar un item del inventario del héroe.
+     * 
+     * @param heroe Héroe cuyo inventario se mostrará
+     * @return Nombre del item seleccionado, o null si el inventario está vacío/cancela
+     */
+    @Override
+    public String seleccionarItem(Heroe heroe) {
+        Inventario inv = heroe.getInventario();
+        
+        if (inv.obtenerEspacios() == 0) {
+            System.out.println("\n Tu inventario está vacío.");
+            return null;
+        }
+        
+        // Convertir items a lista para poder acceder por índice
+        ArrayList<String> listaItems = new ArrayList<>(inv.obtenerItems());
+        
+        System.out.println("\n Selecciona un item para usar:");
+        for (int i = 0; i < listaItems.size(); i++) {
+            String item = listaItems.get(i);
+            int cantidad = inv.obtenerCantidad(item);
+            System.out.println("  " + (i + 1) + ". " + item + " x" + cantidad);
+        }
+        System.out.println("  0. Cancelar");
+        System.out.print("  Tu elección: ");
+        
+        int opcion = leerEntero();
+        
+        // Opción 0 es cancelar
+        if (opcion == 0) {
+            System.out.println(" Acción cancelada.");
+            return null;
+        }
+        
+        // Validar que la opción esté en rango
+        if (opcion < 1 || opcion > listaItems.size()) {
+            System.out.println(" Opción inválida.");
+            return seleccionarItem(heroe); // Reintentar
+        }
+        
+        return listaItems.get(opcion - 1);
     }
 
     /**

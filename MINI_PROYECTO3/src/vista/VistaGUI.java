@@ -31,7 +31,6 @@ import java.util.Map;
 public class VistaGUI extends JFrame implements VistaJuego{
 
     // Componentes principales de la GUI
-    private JFrame frame;
     private ControladorBatalla controlador;
 
     // Mapas para rastrear HP máximo y barras de progreso de cada personaje
@@ -44,11 +43,11 @@ public class VistaGUI extends JFrame implements VistaJuego{
     private JPanel panelHeroes;
     private JPanel panelEnemigos;
     private JTextArea salida;
-    private JScrollPane scroll;
     
     // Botones de acción
     private JButton btnatacar;
     private JButton btnhabilidad;
+    private JButton btnUsarItem;
     private JButton btnGuardar;
     private JButton btnCargar;
     private JButton btnDeshacer;
@@ -125,6 +124,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
 
                 btnatacar = new JButton("Atacar");
                 btnhabilidad = new JButton("Habilidad");
+                btnUsarItem = new JButton("Usar Item");
                 btnGuardar = new JButton("Guardar");
                 btnCargar = new JButton("Cargar");
                 btnDeshacer = new JButton("⟲ Deshacer");
@@ -137,6 +137,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
                 panelBotones.add(btnDeshacer);
                 panelBotones.add(btnatacar);
                 panelBotones.add(btnhabilidad);
+                panelBotones.add(btnUsarItem);
                 panelBotones.add(btnGuardar);
                 panelBotones.add(btnCargar);
                 panelBotones.add(btnRehacer);
@@ -149,6 +150,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
 
                 btnatacar.addActionListener(e -> elegir(1));
                 btnhabilidad.addActionListener(e -> elegir(2));
+                btnUsarItem.addActionListener(e -> elegir(5));
                 // llama los actionlistener con los botones nuevos 
                 btnGuardar.addActionListener(e -> controlador.guardarpartida());
                 btnCargar.addActionListener(e -> controlador.cargarpartida());
@@ -376,6 +378,75 @@ public class VistaGUI extends JFrame implements VistaJuego{
             btnDeshacer.setEnabled(controlador.puedeDeshacer());
             btnRehacer.setEnabled(controlador.puedeRehacer());
         }
+    }
+
+    /**
+     * Muestra el inventario del héroe en el área de log de la GUI.
+     * 
+     * @param heroe Héroe cuyo inventario se mostrará
+     */
+    @Override
+    public void mostrarInventario(Heroe heroe) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n======================================\n");
+        sb.append("INVENTARIO DE ").append(heroe.getNombre().toUpperCase()).append("\n");
+        sb.append("======================================\n");
+        
+        Inventario inv = heroe.getInventario();
+        
+        if (inv.obtenerEspacios() == 0) {
+            sb.append("  ✗ Inventario vacío\n");
+        } else {
+            int contador = 1;
+            for (String nombreItem : inv.obtenerItems()) {
+                int cantidad = inv.obtenerCantidad(nombreItem);
+                sb.append("  ").append(contador).append(". ").append(nombreItem)
+                  .append(" x").append(cantidad).append("\n");
+                contador++;
+            }
+            sb.append("\n  Espacios usados: ").append(inv.obtenerEspacios()).append("/5\n");
+        }
+        sb.append("======================================\n");
+        
+        areaLog.append(sb.toString());
+    }
+
+    /**
+     * Permite al jugador seleccionar un item del inventario del héroe.
+     * En GUI, muestra un diálogo de selección.
+     * 
+     * @param heroe Héroe cuyo inventario se mostrará
+     * @return Nombre del item seleccionado, o null si está vacío/cancela
+     */
+    @Override
+    public String seleccionarItem(Heroe heroe) {
+        Inventario inv = heroe.getInventario();
+        
+        if (inv.obtenerEspacios() == 0) {
+            areaLog.append("\n  Tu inventario está vacío.\n");
+            return null;
+        }
+        
+        // Convertir items a array para diálogo
+        Object[] listaItems = inv.obtenerItems().toArray();
+        
+        // Mostrar diálogo de selección
+        Object seleccion = JOptionPane.showInputDialog(
+            this,
+            " Selecciona un item para usar:",
+            " Usar Item",
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            listaItems,
+            listaItems[0]
+        );
+        
+        if (seleccion == null) {
+            areaLog.append(" Acción cancelada.\n");
+            return null;
+        }
+        
+        return (String) seleccion;
     }
 
     
