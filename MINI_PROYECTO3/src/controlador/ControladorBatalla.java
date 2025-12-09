@@ -2,6 +2,7 @@ package controlador;
 
 import java.io.IOException;
 import java.util.ArrayList;
+
 import modelo.*;
 import vista.*;
 
@@ -18,13 +19,12 @@ import vista.*;
  */
 public class ControladorBatalla{
     
-    private final Batalla batalla;
+    private Batalla batalla;
     private Heroe[] heroes;
     private Enemigo[] enemigos;
-    private final VistaJuego vista;
-    @SuppressWarnings("unused")
-    private Object[] ordenTurnos;
-
+    private VistaJuego vista;
+    // Sistema de undo/redo basado en dos pilas (undo y redo)
+    private final SistemaUndoRedo undoRedo = new SistemaUndoRedo();
     /**
      * Constructor del controlador de batalla.
      * 
@@ -57,10 +57,14 @@ public class ControladorBatalla{
         ArrayList<Object> todos = new ArrayList<>();
 
         // Agregar todos los héroes
-        todos.addAll(java.util.Arrays.asList(heroes));
+        for (Heroe h : heroes){
+            todos.add(h);
+        }
 
         // Agregar todos los enemigos
-        todos.addAll(java.util.Arrays.asList(enemigos));
+        for(Enemigo e : enemigos){
+            todos.add(e);
+        }
 
         ArrayList<Object> orden = new ArrayList<>();
 
@@ -69,12 +73,10 @@ public class ControladorBatalla{
             Object masRapido = todos.get(0);
 
             for(Object o : todos){
-                if(o == null) continue;
 
                 // Obtener velocidad según el tipo de personaje
                 int velO = (o instanceof Heroe)? ((Heroe)o).getVelocidad() : ((Enemigo)o).getVelocidad();
 
-                if(masRapido == null) continue;
                 int velMR = (masRapido instanceof Heroe)? ((Heroe)masRapido).getVelocidad() : ((Enemigo)masRapido).getVelocidad(); 
                 
                 if(velO > velMR){
@@ -145,7 +147,7 @@ public class ControladorBatalla{
             // Delega en el modelo Batalla para guardar en save.txt
             batalla.guardarpartida("save.txt");
             vista.mostrarMensaje("Partida guardada con exito");
-        }catch(IOException e){
+        }catch(Exception e){
             // Muestra mensaje de error si falla el guardado
             vista.mostrarMensaje("Error al guardar" + e.getMessage());
         }
@@ -169,7 +171,7 @@ public class ControladorBatalla{
             vista.mostrarHeroes(this.heroes);
             vista.mostrarEnemigos(this.enemigos);
             vista.mostrarMensaje("Partida cargada exitosamente");
-        }catch(IOException e){
+        }catch(Exception e){
             // Muestra mensaje de error si falla la carga
             vista.mostrarMensaje("Error al cargar" + e.getMessage());
         }
@@ -195,46 +197,141 @@ public class ControladorBatalla{
 
         int accion = vista.elegirAccion(heroe);
 
+        // Interceptar comandos meta (undo/redo) antes del switch
+        // Estos comandos NO consumen el turno del héroe
+        if (accion == 0) {
+            deshacer();
+            return; // No consumir turno
+        }
+        if (accion == 9) {
+            rehacer();
+            return; // No consumir turno
+        }
+
         switch (accion) {
-            case 1 -> {
-                // Atacar
+            case 1: // Atacar
+            try {
+                // Capturar estado previo del héroe y del objetivo para permitir undo
+                int hpPrev = heroe.getHp();
+                int mpPrev = heroe.getMp();
+
+                // Seleccionar objetivo
+                int idx = vista.seleccionarEnemigo(enemigos);
+                if (idx < 0 || idx >= enemigos.length) {
+                    throw new IndexOutOfBoundsException();
+                }
+
+                Enemigo objetivo = enemigos[idx];
+                // Capturar HP/MP del objetivo ANTES de atacar
+                int hpObjetivoPrev = objetivo.getHp();
+                int mpObjetivoPrev = objetivo.getMp();
+                
+                heroe.atacar(objetivo);
+
+                // Registrar acción en la pila de undo/redo con info del objetivo
+                undoRedo.registrarAccion(
+                    new SistemaUndoRedo.Accion(
+                        "Atacó a " + objetivo.getNombre(),
+                        heroe.getNombre(),
+                        hpPrev,
+                        mpPrev,
+                        SistemaUndoRedo.Accion.TipoAccion.ATAQUE,
+                        objetivo.getNombre(),
+                        hpObjetivoPrev,
+                        mpObjetivoPrev
+                    )
+                );
+
+                vista.mostrarMensaje(heroe.getNombre() + " ataco a " + objetivo.getNombre());
+                vista.actualizarBarras();
+
+            } catch (IndexOutOfBoundsException e){
+                vista.mostrarMensaje("Opción inválida. Selecciona un enemigo existente");
+                turnoHeroe(heroe); // Reintentar el turno
+            }
+            break;
+
+
+            case 2: // Habilidad
                 try {
-                    // Try-catch para verificar que se seleccione un enemigo válido
+                    // Capturar estado previo del héroe y del objetivo para permitir undo
+                    int hpPrev = heroe.getHp();
+                    int mpPrev = heroe.getMp();
+
+                    // Seleccionar objetivo para la habilidad
                     int idx = vista.seleccionarEnemigo(enemigos);
-                    
-                    // Validar que el índice esté en rango
-                    if(idx < 0 || idx > enemigos.length){
+                    if (idx < 0 || idx >= enemigos.length) {
                         throw new IndexOutOfBoundsException();
                     }
-                    
+
                     Enemigo objetivo = enemigos[idx];
-                    heroe.atacar(objetivo);
+                    // Capturar HP/MP del objetivo ANTES de usar habilidad
+                    int hpObjetivoPrev = objetivo.getHp();
+                    int mpObjetivoPrev = objetivo.getMp();
                     
-                    vista.mostrarMensaje(heroe.getNombre() + " ataco a " + objetivo.getNombre());
-                    vista.actualizarBarras();
+                    // Verificar que tenga MP suficiente para habilidad (ejemplo: 20 MP)
+                    if (heroe.getMp() < 20) {
+                        vista.mostrarMensaje("No tienes MP suficiente para usar habilidad.");
+                        break;
+                    }
+
+                    // Ejecutar habilidad según tipo de héroe
+                    boolean exito = false;
+                    String descripcionHabilidad = "";
                     
-                }catch (IndexOutOfBoundsException e){
+                    switch (heroe.getTipo()) {
+                        case MAGO:
+                        case DRUIDA:
+                            exito = heroe.LanzaHechizoSueño(objetivo);
+                            descripcionHabilidad = "Lanzó hechizo a " + objetivo.getNombre();
+                            break;
+                        case GUERRERO:
+                        case PALADIN:
+                            exito = heroe.provocarEnemigo(objetivo);
+                            descripcionHabilidad = "Provocó a " + objetivo.getNombre();
+                            break;
+                        default:
+                            vista.mostrarMensaje("Este tipo de héroe no tiene habilidades disponibles.");
+                            break;
+                    }
+
+                    if (exito) {
+                        // Registrar acción en la pila de undo/redo con info del objetivo
+                        undoRedo.registrarAccion(
+                            new SistemaUndoRedo.Accion(
+                                descripcionHabilidad,
+                                heroe.getNombre(),
+                                hpPrev,
+                                mpPrev,
+                                SistemaUndoRedo.Accion.TipoAccion.HECHIZO,
+                                objetivo.getNombre(),
+                                hpObjetivoPrev,
+                                mpObjetivoPrev
+                            )
+                        );
+
+                        vista.mostrarMensaje(heroe.getNombre() + " usó habilidad: " + descripcionHabilidad);
+                        vista.actualizarBarras();
+                    } else {
+                        vista.mostrarMensaje("No se pudo ejecutar la habilidad.");
+                    }
+
+                } catch (IndexOutOfBoundsException e) {
                     vista.mostrarMensaje("Opción inválida. Selecciona un enemigo existente");
                     turnoHeroe(heroe); // Reintentar el turno
                 }
-            }
-
-
-            case 2 -> // Habilidad (no implementada)
-                vista.mostrarMensaje("no esta implementada por temas de presupuesto");
+                break;
             
-            case 3 -> {
-                // Guardar partida
+            case 3: // Guardar partida
                 try {
                     batalla.guardarpartida("save.txt");
                     vista.mostrarMensaje("Partida guardada correctamente");
                 } catch (IOException e) {
                     vista.mostrarMensaje("Error al guardar la partida");
                 }
-            }
+                break;
 
-            case 4 -> {
-                // Cargar partida
+            case 4: // Cargar partida
                 try {
                     batalla.cargarpartida("save.txt");
                     vista.actualizarBarras();
@@ -243,12 +340,75 @@ public class ControladorBatalla{
                 } catch (IOException e) {
                     vista.mostrarMensaje("No se pudo cargar la partida");
                 }
-            }
+                break;
 
-            default -> {
+            case 5: // Usar Item
+                try {
+                    // Capturar estado previo del héroe
+                    int hpPrev = heroe.getHp();
+                    int mpPrev = heroe.getMp();
+
+                    // Mostrar inventario y permitir seleccionar item
+                    vista.mostrarInventario(heroe);
+                    String nombreItemSeleccionado = vista.seleccionarItem(heroe);
+
+                    // Si el jugador cancela, no consumir turno
+                    if (nombreItemSeleccionado == null) {
+                        break;
+                    }
+
+                    // Obtener el item del catálogo
+                    Item item = GestorObjetos.obtenerItem(nombreItemSeleccionado);
+                    if (item == null) {
+                        vista.mostrarMensaje("Error: Item no encontrado en catálogo");
+                        break;
+                    }
+
+                    // Verificar que el héroe tiene el item
+                    if (!heroe.getInventario().contiene(nombreItemSeleccionado)) {
+                        vista.mostrarMensaje("Error: No tienes este item");
+                        break;
+                    }
+
+                    // Capturar cantidad anterior del item para undo/redo
+                    int cantidadAnterior = heroe.getInventario().obtenerCantidad(nombreItemSeleccionado);
+
+                    // Aplicar efecto del item
+                    boolean efectoAplicado = aplicarEfectoItem(heroe, item);
+
+                    if (efectoAplicado) {
+                        // Consumir el item del inventario
+                        heroe.getInventario().usarItem(nombreItemSeleccionado, 1);
+
+                        // Registrar en undo/redo con información del item
+                        undoRedo.registrarAccion(
+                            new SistemaUndoRedo.Accion(
+                                "Usó " + nombreItemSeleccionado + " (x" + cantidadAnterior + ")",
+                                heroe.getNombre(),
+                                hpPrev,
+                                mpPrev,
+                                SistemaUndoRedo.Accion.TipoAccion.OBJETO,
+                                nombreItemSeleccionado, // Nombre del item como "objetivo"
+                                cantidadAnterior,      // Cantidad anterior del item
+                                cantidadAnterior - 1   // Cantidad después de usar
+                            )
+                        );
+
+                        vista.mostrarMensaje(heroe.getNombre() + " usó " + nombreItemSeleccionado);
+                        vista.actualizarBarras();
+                    } else {
+                        vista.mostrarMensaje("No se pudo usar el item");
+                    }
+
+                } catch (Exception e) {
+                    vista.mostrarMensaje("Error al usar item: " + e.getMessage());
+                }
+                break;
+
+            default:
                 vista.mostrarMensaje("Opcion invalida");
                 turnoHeroe(heroe); // Reintentar el turno
-            }
+                break;
         }
     }
 
@@ -305,6 +465,216 @@ public class ControladorBatalla{
         for (Enemigo e : enemigos) if (e.esta_vivo()) return e;
         return null;
     }   
+
+    /**METODOS UNDO REDO */
+
+    /**
+     * Busca un héroe por nombre.
+     * @param nombre Nombre del héroe a buscar
+     * @return El héroe si existe, null en caso contrario
+     */
+    private Heroe buscarHeroe(String nombre) {
+        for (Heroe h : heroes) {
+            if (h.getNombre().equals(nombre)) {
+                return h;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Busca un enemigo por nombre.
+     * @param nombre Nombre del enemigo a buscar
+     * @return El enemigo si existe, null en caso contrario
+     */
+    private Enemigo buscarEnemigo(String nombre) {
+        for (Enemigo e : enemigos) {
+            if (e.getNombre().equals(nombre)) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    public void deshacer(){
+        if (undoRedo.puedeDeshacer()){
+            SistemaUndoRedo.Accion acc = undoRedo.deshacer();
+            
+            if (acc != null) {
+                // Restaurar HP/MP del actor (el que realizó la acción)
+                Personaje actor = buscarHeroe(acc.getPersonajeName());
+                if (actor == null) {
+                    actor = buscarEnemigo(acc.getPersonajeName());
+                }
+                
+                if (actor != null) {
+                    actor.setHp(acc.getHpAnterior());
+                    actor.setMp(acc.getMpAnterior());
+                }
+                
+                // Restaurar HP/MP del objetivo (el que fue afectado)
+                if (acc.getObjetivoName() != null && !acc.getObjetivoName().isEmpty()) {
+                    // Si es una acción de uso de item, restaurar el item al inventario
+                    if (acc.getTipo() == SistemaUndoRedo.Accion.TipoAccion.OBJETO) {
+                        Heroe heroActor = buscarHeroe(acc.getPersonajeName());
+                        if (heroActor != null) {
+                            // Restaurar la cantidad anterior del item
+                            heroActor.getInventario().agregarItem(acc.getObjetivoName(), 1);
+                        }
+                    } else {
+                        // Caso normal: restaurar HP/MP del objetivo (enemigo/aliado)
+                        Personaje objetivo = buscarHeroe(acc.getObjetivoName());
+                        if (objetivo == null) {
+                            objetivo = buscarEnemigo(acc.getObjetivoName());
+                        }
+                        
+                        if (objetivo != null) {
+                            objetivo.setHp(acc.getHpAnteriorObjetivo());
+                            objetivo.setMp(acc.getMpAnteriorObjetivo());
+                        }
+                    }
+                }
+                
+                vista.actualizarBarras();
+                vista.mostrarMensaje("⟲ Accion deshecha: " + acc.getDescripcion());
+            }
+        } else {
+            vista.mostrarMensaje("No hay acciones para deshacer");
+        }
+    }
+
+    public void rehacer(){
+        if (undoRedo.puedeRehacer()){
+            SistemaUndoRedo.Accion acc = undoRedo.rehacer();
+            
+            if (acc != null) {
+                // Restaurar HP/MP del actor (el que realizó la acción)
+                Personaje actor = buscarHeroe(acc.getPersonajeName());
+                if (actor == null) {
+                    actor = buscarEnemigo(acc.getPersonajeName());
+                }
+                
+                if (actor != null) {
+                    actor.setHp(acc.getHpAnterior());
+                    actor.setMp(acc.getMpAnterior());
+                }
+                
+                // Restaurar HP/MP del objetivo (el que fue afectado)
+                if (acc.getObjetivoName() != null && !acc.getObjetivoName().isEmpty()) {
+                    Personaje objetivo = buscarHeroe(acc.getObjetivoName());
+                    if (objetivo == null) {
+                        objetivo = buscarEnemigo(acc.getObjetivoName());
+                    }
+                    
+                    if (objetivo != null) {
+                        objetivo.setHp(acc.getHpAnteriorObjetivo());
+                        objetivo.setMp(acc.getMpAnteriorObjetivo());
+                    }
+                }
+                
+                vista.actualizarBarras();
+                vista.mostrarMensaje("⟳ Accion rehecha: " + acc.getDescripcion());
+            }
+        } else {
+            vista.mostrarMensaje("No hay acciones para rehacer");
+        }
+    }
+
+    /**
+     * Verifica si hay acciones disponibles para deshacer.
+     * @return true si la pila de undo no está vacía
+     */
+    public boolean puedeDeshacer() {
+        return undoRedo.puedeDeshacer();
+    }
+
+    /**
+     * Verifica si hay acciones disponibles para rehacer.
+     * @return true si la pila de redo no está vacía
+     */
+    public boolean puedeRehacer() {
+        return undoRedo.puedeRehacer();
+    }
+
+    /**
+     * Aplica el efecto de un item al héroe.
+     * Según el tipo de item, restaura HP, MP, o aplica buffs.
+     * 
+     * @param heroe Héroe que usa el item
+     * @param item Item a aplicar
+     * @return true si el efecto se aplicó exitosamente
+     */
+    private boolean aplicarEfectoItem(Heroe heroe, Item item) {
+        if (item == null) return false;
+
+        TipoItem tipo = item.getTipo();
+        int valor = item.getValorEfecto();
+
+        switch (tipo) {
+            case POCION:
+            case POCION_FUERTE:
+                // Restaurar HP
+                int hpRestaurado = Math.min(heroe.getHp() + valor, heroe.getHpMax());
+                heroe.setHp(hpRestaurado);
+                vista.mostrarMensaje("  ✓ " + heroe.getNombre() + " restauró " + valor + " HP");
+                return true;
+
+            case ELIXIR:
+                // Restaurar todo HP y MP
+                heroe.setHp(heroe.getHpMax());
+                heroe.setMp(heroe.getMpMax());
+                vista.mostrarMensaje("  ✓ " + heroe.getNombre() + " restauró todo HP y MP");
+                return true;
+
+            case ANTIDOTO:
+                // Cura efectos negativos (futuro: cuando se implemente sistema de estados)
+                vista.mostrarMensaje("  ✓ " + heroe.getNombre() + " se curó de efectos negativos");
+                return true;
+
+            case BOMBA:
+                // Causa daño a enemigos
+                // Seleccionar enemigo objetivo
+                try {
+                    int idx = vista.seleccionarEnemigo(enemigos);
+                    if (idx < 0 || idx >= enemigos.length) {
+                        return false;
+                    }
+                    Enemigo objetivo = enemigos[idx];
+                    objetivo.setHp(Math.max(0, objetivo.getHp() - valor));
+                    vista.mostrarMensaje("  ✓ " + heroe.getNombre() + " lanzó bomba a " + objetivo.getNombre() + " (" + valor + " daño)");
+                    return true;
+                } catch (Exception e) {
+                    vista.mostrarMensaje("  ✗ Error al seleccionar objetivo");
+                    return false;
+                }
+
+            case ESPADA:
+            case ESCUDO:
+            case ARMADURA:
+                // Buffs de ataque/defensa (futuro: cuando se implemente sistema de buffs)
+                vista.mostrarMensaje("  ✓ " + heroe.getNombre() + " equipó " + item.getNombre());
+                return true;
+
+            case HIELO:
+                // Hechizo de hielo (daño)
+                try {
+                    int idx = vista.seleccionarEnemigo(enemigos);
+                    if (idx < 0 || idx >= enemigos.length) {
+                        return false;
+                    }
+                    Enemigo objetivo = enemigos[idx];
+                    objetivo.setHp(Math.max(0, objetivo.getHp() - valor));
+                    vista.mostrarMensaje("  ✓ " + heroe.getNombre() + " lanzó bola de hielo a " + objetivo.getNombre() + " (" + valor + " daño)");
+                    return true;
+                } catch (Exception e) {
+                    vista.mostrarMensaje("  ✗ Error al seleccionar objetivo");
+                    return false;
+                }
+
+            default:
+                return false;
+        }
+    }
 
     /**
      * Inicializa la vista con este controlador y comienza la batalla.

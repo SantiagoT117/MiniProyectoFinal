@@ -1,8 +1,5 @@
 package modelo;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Clase que representa a un héroe jugable en el juego.
  * Extiende de Personaje e implementa las interfaces Sanador, Tanque y Hechicero,
@@ -21,7 +18,8 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
 
     private final Tipo_Heroe tipo;  // Tipo de héroe (define sus habilidades disponibles)
     private int hpMax;              // HP máximo para cálculos de curación y barras de progreso
-    private final Map<String, Integer> inventario = new HashMap<>(); // Inventario de objetos
+    private int mpMax;              // MP máximo para cálculos de magia
+    private final Inventario inventario = new Inventario(); // Inventario de objetos
 
     /**
      * Constructor del héroe.
@@ -38,6 +36,7 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
         super(nombre, hp, mp, ataque, defensa, velocidad);
         this.tipo = tipo;
         this.hpMax = hp;
+        this.mpMax = mp;
     }
 
     public Tipo_Heroe getTipo() {
@@ -52,6 +51,14 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
         this.hpMax = hpMax; 
     }
 
+    public int getMpMax(){
+        return mpMax;
+    }
+
+    public void setMpMax(int mpMax) {
+        this.mpMax = mpMax; 
+    }
+
     // ==================== INVENTARIO ====================
 
     /**
@@ -60,7 +67,7 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
      * @param cantidad Cantidad a añadir
      */
     public void agregarObjeto(String nombreObjeto, int cantidad) {
-        inventario.put(nombreObjeto, inventario.getOrDefault(nombreObjeto, 0) + cantidad);
+        inventario.agregarItem(nombreObjeto, cantidad);
     }
 
     /**
@@ -70,14 +77,7 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
      * @return true si se pudo quitar, false si no hay suficiente cantidad
      */
     public boolean quitarObjeto(String nombreObjeto, int cantidad) {
-        int actual = inventario.getOrDefault(nombreObjeto, 0);
-        if (actual < cantidad) return false;
-        if (actual == cantidad) {
-            inventario.remove(nombreObjeto);
-        } else {
-            inventario.put(nombreObjeto, actual - cantidad);
-        }
-        return true;
+        return inventario.usarItem(nombreObjeto, cantidad);
     }
 
     /**
@@ -86,14 +86,14 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
      * @return Cantidad disponible (0 si no existe)
      */
     public int consultarObjeto(String nombreObjeto) {
-        return inventario.getOrDefault(nombreObjeto, 0);
+        return inventario.obtenerCantidad(nombreObjeto);
     }
 
     /**
      * Devuelve el inventario completo.
-     * @return Mapa con los objetos y sus cantidades
+     * @return Objeto Inventario con todos los items
      */
-    public Map<String, Integer> getInventario() {
+    public Inventario getInventario() {
         return inventario;
     }
 

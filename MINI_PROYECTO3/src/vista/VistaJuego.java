@@ -110,6 +110,22 @@ public interface VistaJuego {
     int seleccionarHeroeMuerto(Heroe[] heroes);
 
     /**
+     * Muestra el inventario del héroe con todos sus items y cantidades.
+     * 
+     * @param heroe Héroe cuyo inventario se mostrará
+     */
+    void mostrarInventario(Heroe heroe);
+
+    /**
+     * Permite al jugador seleccionar un item del inventario del héroe.
+     * Retorna el nombre del item seleccionado o null si cancela.
+     * 
+     * @param heroe Héroe cuyo inventario se mostrará
+     * @return Nombre del item seleccionado, o null si el inventario está vacío/cancela
+     */
+    String seleccionarItem(Heroe heroe);
+
+    /**
      * Lee un número entero de la entrada del usuario.
      * 
      * @return Número entero ingresado

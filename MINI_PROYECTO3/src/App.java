@@ -1,7 +1,9 @@
-import controlador.ControladorBatalla;
 import java.util.Scanner;
+
+import controlador.ControladorBatalla;
 import modelo.Batalla;
 import modelo.Enemigo;
+import modelo.GestorObjetos;
 import modelo.Heroe;
 import modelo.Tipo_Enemigo;
 import modelo.Tipo_Heroe;
@@ -36,35 +38,34 @@ public class App {
 
         VistaJuego vista = null;
         
+        Scanner sc = new Scanner(System.in);
         int opcion = 0;
         
-        try (Scanner sc = new Scanner(System.in)) {
-            // Bucle para validar que el usuario elija una opción válida (1 o 2)
-            while (opcion != 1 && opcion != 2) {
-                try {
-                    // Preguntamos al usuario si desea jugar por GUI o Terminal 
-                    System.out.println("Bienvenido a Dragon Quest VIII");
-                    System.out.println("1. Terminal");
-                    System.out.println("2. GUI");
-                    System.out.println("En que modo desea jugar?");
-                    
-                    String entrada = sc.nextLine();
-                    
-                    // Convertimos la entrada a número
-                    opcion = Integer.parseInt(entrada);
-                    
-                    // Validamos que sea 1 o 2
-                    if(opcion != 1 && opcion !=2){
-                        System.out.println("Opción inválida. Debes escoger 1 o 2.\n");
-                    }
-                    
-                }catch(NumberFormatException e){
-                    // Capturamos errores de formato (NumberFormatException)
-                    System.out.println("Ingresa un número válido.");
-                    
+        // Bucle para validar que el usuario elija una opción válida (1 o 2)
+        while (opcion != 1 && opcion != 2) {
+            try {
+                // Preguntamos al usuario si desea jugar por GUI o Terminal 
+                System.out.println("Bienvenido a Dragon Quest VIII");
+                System.out.println("1. Terminal");
+                System.out.println("2. GUI");
+                System.out.println("En que modo desea jugar?");
+                
+                String entrada = sc.nextLine();
+                
+                // Convertimos la entrada a número
+                opcion = Integer.parseInt(entrada);
+                
+                // Validamos que sea 1 o 2
+                if(opcion != 1 && opcion !=2){
+                    System.out.println("Opción inválida. Debes escoger 1 o 2.\n");
                 }
                 
+            }catch(Exception e){
+                // Capturamos errores de formato (NumberFormatException)
+                System.out.println("Ingresa un número válido.");
+                
             }
+            
         }
         
         // Instanciamos la vista según la opción seleccionada
@@ -84,30 +85,10 @@ public class App {
             new Heroe("Jessica", Tipo_Heroe.GUERRERO, 40, 5, 20, 35, 25),
         };
         
-        // Agregar objetos al inventario de los héroes
-        heroes[0].agregarObjeto("Poción de Vida", 5);
-        heroes[0].agregarObjeto("Poción de Maná", 3);
-        heroes[0].agregarObjeto("Antídoto", 2);
-        heroes[0].agregarObjeto("Elixir", 1);
-        heroes[0].agregarObjeto("Éter", 2);
-        
-        heroes[1].agregarObjeto("Poción de Vida", 3);
-        heroes[1].agregarObjeto("Elixir", 1);
-        heroes[1].agregarObjeto("Poción de Maná", 2);
-        heroes[1].agregarObjeto("Antídoto", 1);
-        heroes[1].agregarObjeto("Éter", 1);
-        
-        heroes[2].agregarObjeto("Poción de Vida", 4);
-        heroes[2].agregarObjeto("Poción de Maná", 2);
-        heroes[2].agregarObjeto("Antídoto", 2);
-        heroes[2].agregarObjeto("Elixir", 1);
-        heroes[2].agregarObjeto("Éter", 3);
-        
-        heroes[3].agregarObjeto("Poción de Vida", 3);
-        heroes[3].agregarObjeto("Antídoto", 3);
-        heroes[3].agregarObjeto("Poción de Maná", 2);
-        heroes[3].agregarObjeto("Elixir", 1);
-        heroes[3].agregarObjeto("Éter", 2);
+        // Equipar a los héroes con sus items iniciales
+        for (Heroe heroe : heroes) {
+            GestorObjetos.equiparHeroeInicial(heroe);
+        }
         
         // Creación del equipo de enemigos con diferentes tipos
         // Parámetros: nombre, hp, mp, ataque, defensa, velocidad, tipo
@@ -126,6 +107,7 @@ public class App {
         ControladorBatalla controlador = new ControladorBatalla(batalla, heroes, enemigos, vista);
         
         // Inicialización y comienzo de la batalla
+        sc.close(); // Cerrar Scanner para evitar resource leak
         controlador.iniciar();
         controlador.iniciarBatalla();
     }
