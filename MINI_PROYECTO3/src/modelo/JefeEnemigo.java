@@ -73,7 +73,7 @@ public class JefeEnemigo extends Enemigo {
     @Override
     public void AtacarATodos() {
         // Daño base multiplicado por 2 para ataque de área (ejemplo)
-        int daño = this.getAtaque() * 2;
+        // Implementación de ataque grupal pendiente
         return;
     }
 }

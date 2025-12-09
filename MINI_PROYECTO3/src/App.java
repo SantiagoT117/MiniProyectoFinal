@@ -101,6 +101,7 @@ public class App {
         ControladorBatalla controlador = new ControladorBatalla(batalla, heroes, enemigos, vista);
         
         // Inicialización y comienzo de la batalla
+        sc.close(); // Cerrar Scanner para evitar resource leak
         controlador.iniciar();
         controlador.iniciarBatalla();
     }

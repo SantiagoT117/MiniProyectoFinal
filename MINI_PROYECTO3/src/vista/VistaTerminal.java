@@ -83,11 +83,16 @@ public class VistaTerminal implements VistaJuego {
      */
     @Override
     public int elegirAccion(Heroe heroe) {
-        System.out.println("Elige una accion para " + heroe.getNombre() +"\n");
-        System.out.println("1. Atacar\n");
+        System.out.println("\n========================================");
+        System.out.println("Turno de: " + heroe.getNombre());
+        System.out.println("========================================");
+        System.out.println("0. ⟲ Deshacer última acción");
+        System.out.println("1. Atacar");
         System.out.println("2. Habilidad");
-        System.out.println("3.guardar partida");
-        System.out.println("4.cargar partida");
+        System.out.println("3. Guardar partida");
+        System.out.println("4. Cargar partida");
+        System.out.println("9. ⟳ Rehacer acción deshecha");
+        System.out.println("========================================");
         return leerEntero();
     }
 

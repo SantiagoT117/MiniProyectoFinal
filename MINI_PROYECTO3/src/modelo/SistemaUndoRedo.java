@@ -42,6 +42,11 @@ public class SistemaUndoRedo {
         private int hpAnterior;
         private int mpAnterior;
         private TipoAccion tipo;
+        
+        // Campos para guardar el estado del objetivo (enemigo/aliado afectado)
+        private String objetivoName;
+        private int hpAnteriorObjetivo;
+        private int mpAnteriorObjetivo;
 
         public enum TipoAccion {
             ATAQUE("Ataque"),
@@ -74,6 +79,33 @@ public class SistemaUndoRedo {
             this.hpAnterior = hpAnterior;
             this.mpAnterior = mpAnterior;
             this.tipo = tipo;
+            this.objetivoName = null;
+            this.hpAnteriorObjetivo = 0;
+            this.mpAnteriorObjetivo = 0;
+        }
+
+        /**
+         * Constructor de una acción con información del objetivo afectado.
+         * 
+         * @param descripcion Descripción de la acción
+         * @param personajeName Nombre del personaje que realizó la acción
+         * @param hpAnterior HP anterior del actor
+         * @param mpAnterior MP anterior del actor
+         * @param tipo Tipo de acción
+         * @param objetivoName Nombre del personaje afectado (enemigo/aliado)
+         * @param hpAnteriorObjetivo HP anterior del objetivo
+         * @param mpAnteriorObjetivo MP anterior del objetivo
+         */
+        public Accion(String descripcion, String personajeName, int hpAnterior, int mpAnterior, TipoAccion tipo,
+                      String objetivoName, int hpAnteriorObjetivo, int mpAnteriorObjetivo) {
+            this.descripcion = descripcion;
+            this.personajeName = personajeName;
+            this.hpAnterior = hpAnterior;
+            this.mpAnterior = mpAnterior;
+            this.tipo = tipo;
+            this.objetivoName = objetivoName;
+            this.hpAnteriorObjetivo = hpAnteriorObjetivo;
+            this.mpAnteriorObjetivo = mpAnteriorObjetivo;
         }
 
         // Getters
@@ -82,6 +114,11 @@ public class SistemaUndoRedo {
         public int getHpAnterior() { return hpAnterior; }
         public int getMpAnterior() { return mpAnterior; }
         public TipoAccion getTipo() { return tipo; }
+        
+        // Getters para el objetivo
+        public String getObjetivoName() { return objetivoName; }
+        public int getHpAnteriorObjetivo() { return hpAnteriorObjetivo; }
+        public int getMpAnteriorObjetivo() { return mpAnteriorObjetivo; }
 
         @Override
         public String toString() {

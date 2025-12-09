@@ -1,8 +1,5 @@
 package modelo;
 
-import java.io.IOException;
-import java.util.InputMismatchException;
-
 public class Enemigo extends Personaje implements Agresivo, Jefe {
 
     private final Tipo_Enemigo tipo;

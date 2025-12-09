@@ -51,6 +51,8 @@ public class VistaGUI extends JFrame implements VistaJuego{
     private JButton btnhabilidad;
     private JButton btnGuardar;
     private JButton btnCargar;
+    private JButton btnDeshacer;
+    private JButton btnRehacer;
     private JPanel panelEstado;
     private JTextArea areaLog;
     
@@ -125,11 +127,19 @@ public class VistaGUI extends JFrame implements VistaJuego{
                 btnhabilidad = new JButton("Habilidad");
                 btnGuardar = new JButton("Guardar");
                 btnCargar = new JButton("Cargar");
+                btnDeshacer = new JButton("⟲ Deshacer");
+                btnRehacer = new JButton("⟳ Rehacer");
 
+                // Inicialmente deshabilitados (se habilitarán cuando haya acciones)
+                btnDeshacer.setEnabled(false);
+                btnRehacer.setEnabled(false);
+
+                panelBotones.add(btnDeshacer);
                 panelBotones.add(btnatacar);
                 panelBotones.add(btnhabilidad);
                 panelBotones.add(btnGuardar);
                 panelBotones.add(btnCargar);
+                panelBotones.add(btnRehacer);
 
                 add(panelBotones, BorderLayout.SOUTH);
 
@@ -142,6 +152,8 @@ public class VistaGUI extends JFrame implements VistaJuego{
                 // llama los actionlistener con los botones nuevos 
                 btnGuardar.addActionListener(e -> controlador.guardarpartida());
                 btnCargar.addActionListener(e -> controlador.cargarpartida());
+                btnDeshacer.addActionListener(e -> elegir(0));
+                btnRehacer.addActionListener(e -> elegir(9));
 
                 setVisible(true);
 
@@ -156,16 +168,6 @@ public class VistaGUI extends JFrame implements VistaJuego{
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
-    // crea el panel heroes mas no lo muestra
-    private void crearPanelHeroes(Heroe h){
-
-        panelHeroes = new JPanel();
-        panelHeroes.setLayout(new GridLayout(3, 1));
-        panelHeroes.setBorder(BorderFactory.createTitledBorder("Heroes"));
-        panelHeroes.setPreferredSize(new Dimension(300, 200));
-
-    }
-    
     // esta funcion si muestra a los heroes creados
     private JPanel generarHeroe(Heroe h){
 
@@ -190,20 +192,6 @@ public class VistaGUI extends JFrame implements VistaJuego{
         card.add(vida, BorderLayout.CENTER);
         
         return card;
-    }
-
-    private void crearPanelEnemigos(Enemigo e){
-
-        panelEnemigos = new JPanel();
-        panelEnemigos.setLayout(new GridLayout(3, 1));
-        panelEnemigos.setBorder(BorderFactory.createTitledBorder("Enemigos"));
-        panelEnemigos.setPreferredSize(new Dimension(300, 200));
-
-        JLabel nombre = new JLabel(e.getNombre() + " //velocidad: " + e.getVelocidad() );
-        nombre.setForeground(Color.WHITE);
-        nombre.setFont(new Font("Arial", Font.BOLD, 12));
-        
-        frame.add(panelHeroes, BorderLayout.WEST);
     }
 
     private JPanel generarEnemigo(Enemigo e, int index){
@@ -250,38 +238,6 @@ public class VistaGUI extends JFrame implements VistaJuego{
         for (Enemigo e : barrasEnemigos.keySet()){
             barrasEnemigos.get(e).setValue(e.getHp());
         }
-    }
-
-
-
-    private void crearPanelLog(){
-        areaLog = new JTextArea();
-        areaLog.setEditable(false);
-        areaLog.setFont(new Font("Consolas", Font.PLAIN, 14));
-        areaLog.setBackground(new Color(20,20,20));
-        areaLog.setForeground(Color.GREEN);
-
-        scroll = new JScrollPane(areaLog);
-
-        frame.add(scroll, BorderLayout.CENTER);
-    }
-
-    private void crearPanelBotones(){
-        JPanel panel = new JPanel();
-
-        btnatacar = new JButton("Atacar");
-        btnatacar.setFont(new Font("Arial", Font.BOLD, 18));
-
-        btnhabilidad = new JButton("Habilidad");
-        btnhabilidad.setFont(new Font("Arial", Font.BOLD, 18));
-
-        btnatacar.addActionListener(e -> elegir(1));
-        btnhabilidad.addActionListener(e -> elegir(2));;
-
-        panel.add(btnatacar);
-        panel.add(btnhabilidad);
-
-        frame.add(panel, BorderLayout.SOUTH);
     }
 
     private void elegir(int n) {
@@ -363,6 +319,8 @@ public class VistaGUI extends JFrame implements VistaJuego{
         accionElegida = -1;
         mostrarMensaje("Elige una accion");
 
+        // Actualizar estado de botones undo/redo
+        actualizarBotonesUndoRedo();
 
         synchronized (lockAccion) {
             while (accionElegida == -1) {
@@ -409,6 +367,16 @@ public class VistaGUI extends JFrame implements VistaJuego{
         setVisible(true);
     }
 
+    /**
+     * Actualiza el estado (habilitado/deshabilitado) de los botones de undo/redo
+     * según la disponibilidad de acciones en el SistemaUndoRedo.
+     */
+    private void actualizarBotonesUndoRedo() {
+        if (controlador != null) {
+            btnDeshacer.setEnabled(controlador.puedeDeshacer());
+            btnRehacer.setEnabled(controlador.puedeRehacer());
+        }
+    }
 
     
 }
