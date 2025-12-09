@@ -84,11 +84,6 @@ public class App {
             new Heroe("Jessica", Tipo_Heroe.GUERRERO, 40, 5, 20, 35, 25),
         };
         
-        // Equipar a cada héroe con sus ítems iniciales
-        for (Heroe heroe : heroes) {
-            GestorObjetos.equiparHeroeInicial(heroe);
-        }
-        
         // Creación del equipo de enemigos con diferentes tipos
         // Parámetros: nombre, hp, mp, ataque, defensa, velocidad, tipo
         Enemigo[] enemigos = {

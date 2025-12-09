@@ -18,7 +18,6 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
 
     private final Tipo_Heroe tipo;  // Tipo de héroe (define sus habilidades disponibles)
     private int hpMax;              // HP máximo para cálculos de curación y barras de progreso
-    private Inventario inventario;  // Inventario de objetos que puede usar en batalla
 
     /**
      * Constructor del héroe.
@@ -35,7 +34,6 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
         super(nombre, hp, mp, ataque, defensa, velocidad);
         this.tipo = tipo;
         this.hpMax = hp;
-        this.inventario = new Inventario(); // Inicializar inventario vacío
     }
 
     public Tipo_Heroe getTipo() {
@@ -48,15 +46,6 @@ public class Heroe extends Personaje implements Sanador, Tanque, Hechicero {
 
     public void setHpMax(int hpMax) {
         this.hpMax = hpMax; 
-    }
-
-    /**
-     * Obtiene el inventario del héroe.
-     * 
-     * @return Inventario del héroe
-     */
-    public Inventario getInventario() {
-        return inventario;
     }
 
 
