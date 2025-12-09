@@ -1,0 +1,222 @@
+package controlador;
+
+import java.io.IOException;
+// import java.awt.event.ActionEvent;
+// import java.awt.event.ActionListener;
+import java.util.ArrayList;
+
+import modelo.*;
+import vista.*;
+
+
+public class ControladorBatalla{
+    
+    private Batalla batalla;
+    private Heroe[] heroes;
+    private Enemigo[] enemigos;
+    private VistaJuego vista;
+    private Object[] ordenTurnos;
+
+
+    public ControladorBatalla(Batalla batalla, Heroe[] heroes, Enemigo[] enemigos, VistaJuego vista){
+        this.heroes = heroes;
+        this.enemigos = enemigos;
+        this.vista = vista;
+        this.batalla = batalla;
+    }
+
+
+    // funcion para generar el orden de ataque segun la velocidad
+    private ArrayList<Object> ordenAtaque(){
+        ArrayList<Object> todos = new ArrayList<>();
+
+        for (Heroe h : heroes){
+            todos.add(h);
+        }
+
+        for(Enemigo e : enemigos){
+            todos.add(e);
+        }
+
+        ArrayList<Object> orden = new ArrayList<>();
+
+        while(!todos.isEmpty()){
+            Object masRapido = todos.get(0);
+
+            for(Object o : todos){
+
+                int velO = (o instanceof Heroe)? ((Heroe)o).getVelocidad() : ((Enemigo)o).getVelocidad();
+
+                int velMR = (masRapido instanceof Heroe)? ((Heroe)masRapido).getVelocidad() : ((Enemigo)masRapido).getVelocidad(); 
+                
+                if(velO > velMR){
+                    masRapido = o;
+                }
+            }
+
+            orden.add(masRapido);
+            todos.remove(masRapido);
+        }
+        return orden;
+    }
+
+    // funcion que da inicio a la batalla
+    public void iniciarBatalla() {
+
+        vista.mostrarMensaje("¡La batalla comienza!");
+        vista.mostrarHeroes(heroes);
+        vista.mostrarEnemigos(enemigos);
+        vista.mostrarMensaje("El orden de ataque es: " + ordenAtaque());
+
+        // empieza un bucle si hay enemigos y heroes vivos
+        while (hayHeroesVivos() && hayEnemigosVivos()) {
+
+            for (Heroe heroe : heroes) {
+                if (heroe.esta_vivo()) {
+                    turnoHeroe(heroe);
+
+                    if (!hayEnemigosVivos()) {
+                        vista.mostrarVictoria();
+                        return;
+                    }
+                }
+            }
+
+            // El enemigo ataca después
+            for (Enemigo enemigo : enemigos) {
+                if (enemigo.esta_vivo()) {
+                    turnoEnemigo(enemigo);
+
+                    if (!hayHeroesVivos()) {
+                        vista.mostrarDerrota();
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    // controla la funcion guardar partida, importante con un try catch para que no se joda el archivo ni el codigo 
+    public void guardarpartida(){
+        try{
+            // le dice a batalla que guarde en el archivo save.txt
+            batalla.guardarpartida("save.txt");
+            vista.mostrarMensaje("Partida guardada con exito");
+        }catch(Exception e){
+            // muestra mensaje por si hay un error
+            vista.mostrarMensaje("Error al guardar" + e.getMessage());
+        }
+    }
+
+    public void cargarpartida(){
+        try{
+            // le dice a batalla que cargue la partida que quedo guardada en el archivo save.txt
+            batalla.cargarpartida("save.txt");
+            this.heroes = batalla.getEquipoHeroes();
+            this.enemigos = batalla.getEquipoEnemigos();
+            vista.mostrarHeroes(this.heroes);
+            vista.mostrarEnemigos(this.enemigos);
+            //vista.actualizarBarras();
+            vista.mostrarMensaje("Partida cargada exitosamente");
+        }catch(Exception e){
+            // muestra mensaje por si hay un error
+            vista.mostrarMensaje("Error al cargar" + e.getMessage());
+        }
+
+    }
+
+    // controla el turno de los heroes 
+    private void turnoHeroe(Heroe heroe) {
+        vista.mostrarEstado(heroe, primerEnemigoVivo());
+
+        int accion = vista.elegirAccion(heroe);
+
+        switch (accion) {
+            case 1: // Atacar
+            try { // try catch que permite verificar que se usen opciones permitidas, en este caso atacar o habilidad y acepte solo estas 2 
+                int idx = vista.seleccionarEnemigo(enemigos);
+                
+                if(idx < 0 || idx > enemigos.length){
+                    throw new IndexOutOfBoundsException();
+                }
+                Enemigo objetivo = enemigos[idx];
+                heroe.atacar(objetivo);
+
+                vista.mostrarMensaje(heroe.getNombre() + " ataco a " + objetivo.getNombre());
+                vista.actualizarBarras();
+
+            }catch (IndexOutOfBoundsException e){
+                vista.mostrarMensaje("Opción inválida. Selecciona un enemigo existente");
+                turnoHeroe(heroe); 
+            }
+            break;
+
+
+            case 2: // Habilidad
+                vista.mostrarMensaje("no esta implementada por temas de presupuesto");
+                break;
+            
+            case 3:
+                try {
+                    batalla.guardarpartida("save.txt");
+                    vista.mostrarMensaje("Partida guardada correctamente");
+                } catch (IOException e) {
+                    vista.mostrarMensaje("Error al guardar la partida");
+                }
+                break;
+
+            case 4:
+                try {
+                    batalla.cargarpartida("save.txt");
+                    vista.actualizarBarras();
+                    vista.mostrarMensaje("Partida cargada correctamente");
+
+                } catch (IOException e) {
+                    vista.mostrarMensaje("No se pudo cargar la partida");
+                }
+                break;
+
+            default:
+                vista.mostrarMensaje("Opcion invalida");
+                turnoHeroe(heroe);
+                break;
+        }
+    }
+
+    // controla el turno "Automatico" de los enemigos
+    private void turnoEnemigo(Enemigo enemigo) {
+        Heroe objetivo = primerHeroeVivo();
+        enemigo.atacar(objetivo);
+        vista.mostrarMensaje(enemigo.getNombre() + " atacó a " + objetivo.getNombre());
+    }
+
+    private boolean hayHeroesVivos() {
+        for (Heroe h : heroes)
+            if (h.esta_vivo()) return true;
+        return false;
+    }
+
+    private boolean hayEnemigosVivos() {
+        for (Enemigo e : enemigos)
+            if (e.esta_vivo()) return true;
+        return false;
+    }
+
+    private Heroe primerHeroeVivo() {
+        for (Heroe h : heroes) if (h.esta_vivo()) return h;
+        return null;
+    }
+
+    private Enemigo primerEnemigoVivo() {
+        for (Enemigo e : enemigos) if (e.esta_vivo()) return e;
+        return null;
+    }   
+
+    // inicia llamandose asi mismo y al inciarBatalla
+    public void iniciar(){
+        vista.iniciar(this);
+        iniciarBatalla();
+    }
+
+
+}
