@@ -84,6 +84,31 @@ public class App {
             new Heroe("Jessica", Tipo_Heroe.GUERRERO, 40, 5, 20, 35, 25),
         };
         
+        // Agregar objetos al inventario de los héroes
+        heroes[0].agregarObjeto("Poción de Vida", 5);
+        heroes[0].agregarObjeto("Poción de Maná", 3);
+        heroes[0].agregarObjeto("Antídoto", 2);
+        heroes[0].agregarObjeto("Elixir", 1);
+        heroes[0].agregarObjeto("Éter", 2);
+        
+        heroes[1].agregarObjeto("Poción de Vida", 3);
+        heroes[1].agregarObjeto("Elixir", 1);
+        heroes[1].agregarObjeto("Poción de Maná", 2);
+        heroes[1].agregarObjeto("Antídoto", 1);
+        heroes[1].agregarObjeto("Éter", 1);
+        
+        heroes[2].agregarObjeto("Poción de Vida", 4);
+        heroes[2].agregarObjeto("Poción de Maná", 2);
+        heroes[2].agregarObjeto("Antídoto", 2);
+        heroes[2].agregarObjeto("Elixir", 1);
+        heroes[2].agregarObjeto("Éter", 3);
+        
+        heroes[3].agregarObjeto("Poción de Vida", 3);
+        heroes[3].agregarObjeto("Antídoto", 3);
+        heroes[3].agregarObjeto("Poción de Maná", 2);
+        heroes[3].agregarObjeto("Elixir", 1);
+        heroes[3].agregarObjeto("Éter", 2);
+        
         // Creación del equipo de enemigos con diferentes tipos
         // Parámetros: nombre, hp, mp, ataque, defensa, velocidad, tipo
         Enemigo[] enemigos = {
