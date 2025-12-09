@@ -70,7 +70,7 @@ public class Enemigo extends Personaje implements Agresivo, Jefe {
     }
 
     // nueva funcion que sirve para aplicar la logica del daño
-    private int aplicarDañoActualizar(Personaje objetivo, int multiplicador) {
+    private int aplicarDañoActualizar(Personaje objetivo, @SuppressWarnings("unused") int multiplicador) {
         if (objetivo == null || !objetivo.esta_vivo()) return 0;
         int daño = this.ataque - objetivo.getDefensa();
         if (daño < 1) daño = 1; // Daño mínimo de 1
