@@ -11,43 +11,67 @@ import java.awt.event.*;
 import java.util.HashMap;
 import java.util.Map;
 
-
+/**
+ * Implementación de la vista con interfaz gráfica de usuario (GUI).
+ * Utiliza Swing para crear una ventana interactiva con:
+ * - Paneles para mostrar héroes y enemigos
+ * - Barras de progreso para HP de cada personaje
+ * - Botones para las acciones (Atacar, Habilidad, Guardar, Cargar)
+ * - Área de texto para el log de eventos
+ * 
+ * Características:
+ * - Actualización visual en tiempo real de las barras de HP
+ * - Interfaz responsiva con listeners de eventos
+ * - Organización en paneles (héroes a la izquierda, enemigos al centro, log a la derecha)
+ * 
+ * Limitaciones conocidas:
+ * - Las barras de HP no se actualizan correctamente después de cargar una partida
+ * - La sincronización entre GUI y lógica de batalla requiere el uso de locks
+ */
 public class VistaGUI extends JFrame implements VistaJuego{
 
+    // Componentes principales de la GUI
     private JFrame frame;
-
     private ControladorBatalla controlador;
 
+    // Mapas para rastrear HP máximo y barras de progreso de cada personaje
     private Map<Heroe, Integer> hpMaxHeroes = new HashMap<>();
     private Map<Enemigo, Integer> hpMaxEnemigos = new HashMap<>();
-
     private Map<Heroe, JProgressBar> barrasHeroes = new HashMap<>();
     private Map<Enemigo, JProgressBar> barrasEnemigos = new HashMap<>();
 
+    // Paneles y componentes de la interfaz
     private JPanel panelHeroes;
     private JPanel panelEnemigos;
     private JTextArea salida;
     private JScrollPane scroll;
     
+    // Botones de acción
     private JButton btnatacar;
     private JButton btnhabilidad;
     private JButton btnGuardar;
-    // se añaden los botones de guardar y cargar partida
     private JButton btnCargar;
     private JPanel panelEstado;
     private JTextArea areaLog;
     
     private JButton btnVolverMenu;
+    
+    // Variables para manejar la selección del usuario
     private int accionElegida = -1;
     private int enemigoElegido = -1;
 
+    // Locks para sincronizar la interacción del usuario con la lógica del juego
     private final Object lockAccion = new Object();
     private final Object lockEnemigo = new Object();
 
-
+    /**
+     * Constructor de la vista GUI.
+     * Configura la ventana principal, crea todos los paneles y componentes,
+     * y establece los listeners para los botones.
+     */
     public VistaGUI(){
 
-        //cremaos lo que tendra nuestra interfaz
+        // Configuración de la ventana principal
         setTitle("Dragon Quest VIII");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 600);
@@ -55,6 +79,7 @@ public class VistaGUI extends JFrame implements VistaJuego{
         setLocationRelativeTo(null);
         
 
+        // Área de salida de texto (log de eventos)
         salida = new JTextArea();
         salida.setEditable(false);
         salida.setFont(new Font("Consolas", Font.PLAIN, 14));

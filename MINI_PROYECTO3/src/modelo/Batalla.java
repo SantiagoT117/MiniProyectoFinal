@@ -6,17 +6,34 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * Clase que gestiona el estado de una batalla entre héroes y enemigos.
+ * 
+ * Responsabilidades:
+ * - Almacenar los equipos de héroes y enemigos
+ * - Controlar el turno actual de la batalla
+ * - Guardar y cargar partidas usando archivos de texto
+ * - Mantener el estado de si la batalla ha terminado
+ * 
+ * El sistema de guardado utiliza BufferedWriter/BufferedReader
+ * para serializar el estado de la batalla en formato CSV.
+ */
 public class Batalla {
 
-    // cambio de nombre de listas para mayor facilidad
+    // Arrays que contienen los equipos participantes
     private final Heroe[] heroes; 
     private final Enemigo[] enemigos;
-    //------------------------
 
+    // Control del flujo de la batalla
     private int turnoActual;
     private boolean batallaTerminada;
 
-    // Constructor
+    /**
+     * Constructor de la batalla.
+     * 
+     * @param heroes Array de héroes que participan en la batalla
+     * @param enemigos Array de enemigos que participan en la batalla
+     */
     public Batalla(Heroe[] heroes, Enemigo[] enemigos){
         this.heroes = heroes;
         this.enemigos = enemigos;
@@ -24,18 +41,31 @@ public class Batalla {
         this.batallaTerminada = false;
     }
 
-    // metodo para guardar la partida mediante un bufferedWriter
+    /**
+     * Guarda el estado actual de la batalla en un archivo de texto.
+     * 
+     * Formato del archivo:
+     * - Primera línea: "TURNO,<número>"
+     * - Líneas de héroes: "HEROE,nombre,hp,mp,ataque,defensa,velocidad,tipo"
+     * - Líneas de enemigos: "ENEMIGO,nombre,hp,mp,ataque,defensa,velocidad,tipo"
+     * 
+     * Usa BufferedWriter con FileWriter como intermediario para escribir
+     * línea por línea el estado de cada personaje.
+     * 
+     * @param archivo Ruta del archivo donde se guardará la partida
+     * @throws IOException Si ocurre un error al escribir el archivo
+     */
     public void guardarpartida(String archivo) throws IOException{
-    // el bufferedWriter escribira linea por linea todo lo que se lleva de batalla entonces guarda desde el punto donde se decidio guardar los datos de los personajes
-    // y el turno en el que estan. y se le pasa al bufferedWriter un archivo objeto filewriter ya que este es el intermediario
+    // El BufferedWriter escribe línea por línea todos los datos de la batalla
+    // Guarda desde el punto donde se decidió guardar: datos de personajes y turno actual
 
     BufferedWriter writer = new BufferedWriter(new FileWriter(archivo));
 
-        //Guardar turno
+        // Guardar el turno actual como primera línea
         writer.write("TURNO," + turnoActual);
         writer.newLine();
 
-        //Guardar heroes
+        // Guardar todos los héroes con sus atributos
         for (Heroe h : heroes) {
             writer.write(
                 "HEROE," +
@@ -50,7 +80,7 @@ public class Batalla {
             writer.newLine();
         }
 
-        //Guardar enemigos
+        // Guardar todos los enemigos con sus atributos
         for (Enemigo e : enemigos) {
             writer.write(
                 "ENEMIGO," +
@@ -68,33 +98,46 @@ public class Batalla {
         writer.close();
     }
 
-    // metodo para cargar la partida nuevamente con un bufferedReader al cual se le pone su intermediario FileReader
+    /**
+     * Carga una partida guardada desde un archivo de texto.
+     * 
+     * Lee línea por línea el archivo y reconstruye el estado de la batalla:
+     * - Restaura el turno actual
+     * - Recrea todos los héroes con sus atributos guardados
+     * - Recrea todos los enemigos con sus atributos guardados
+     * 
+     * Usa BufferedReader con FileReader como intermediario.
+     * Procesa cada línea dividiéndola por comas y usando switch para
+     * determinar el tipo de dato (TURNO, HEROE, ENEMIGO).
+     * 
+     * @param archivo Ruta del archivo desde donde se cargará la partida
+     * @throws IOException Si ocurre un error al leer el archivo
+     */
     public void cargarpartida(String archivo) throws IOException{
         BufferedReader br = new BufferedReader(new FileReader(archivo));
         String linea;
 
-        // estas son variables para saber en que posicion del array guardar, cada que lee a un heroe lo va guardandi 
+        // Variables para rastrear la posición en los arrays al restaurar
         int iHeroe = 0;
         int iEnemigo = 0;
 
-        // While que permite leer linea por linea 
+        // Leer el archivo línea por línea 
         while ((linea = br.readLine()) != null) {
 
-            // este simplemente divide cada linea cada que haya una coma.
-
-
+            // Dividir cada línea por comas para obtener los campos
             String[] datos = linea.split(",");
 
-            // detecta que tipo de linea es ( turno, heores o enemigos )
+            // Detectar el tipo de línea (TURNO, HEROE o ENEMIGO)
             switch (datos[0]) {
 
                 case "TURNO":
-                    // parseint vuelve una cadena de texto en entero 
+                    // parseInt convierte una cadena de texto en entero 
                     this.turnoActual = Integer.parseInt(datos[1]);
                     break;
 
                 case "HEROE":
-                    // recorre cada heroe cargandolo segun como haya quedado guardado y valueof covierte un texto en valor del enum
+                    // Reconstruir cada héroe con sus datos guardados
+                    // valueOf convierte un texto en valor del enum correspondiente
                     heroes[iHeroe] = new Heroe(
                         datos[1],                          // nombre
                         Tipo_Heroe.valueOf(datos[7]),      // tipo
@@ -108,6 +151,7 @@ public class Batalla {
                     break;
 
                 case "ENEMIGO":
+                    // Reconstruir cada enemigo con sus datos guardados
                     enemigos[iEnemigo] = new Enemigo(
                         datos[1],                          // nombre
                         Integer.parseInt(datos[2]),        // HP
@@ -125,40 +169,44 @@ public class Batalla {
         br.close();
     }
 
-    // Getters
+    // ==================== GETTERS Y SETTERS ====================
+    
     public Heroe[] getEquipoHeroes() { return heroes; }
     public Enemigo[] getEquipoEnemigos() { return enemigos; }
     public boolean isBatallaTerminada() { return batallaTerminada; }
     public int getTurnoActual() { return turnoActual; }
 
-    // Setters
     public void setBatallaTerminada(boolean batallaTerminada){
          this.batallaTerminada = batallaTerminada; }
          
     public void setTurnoActual(int turnoActual) {
          this.turnoActual = turnoActual; }
 
+    // ==================== MÉTODOS AUXILIARES ====================
          
-         /**
-          * Método auxiliar para iniciar una batalla desde un controlador.
-          * Implementación mínima: resetea el estado de la batalla.
-          */
-          public void iniciar() {
-              this.turnoActual = 1;
-              this.batallaTerminada = false;
-            }
+    /**
+     * Inicializa la batalla a su estado inicial.
+     * Resetea el turno a 1 y marca la batalla como no terminada.
+     */
+    public void iniciar() {
+        this.turnoActual = 1;
+        this.batallaTerminada = false;
+    }
             
-            /**
-             * Marca la batalla como finalizada.
-             */
-            public void finalizar() {
-                this.batallaTerminada = true;
-            }
-            
-            public void siguienteTurno() {
-                if (!batallaTerminada) {
-                    turnoActual++;
-                }
-            }
+    /**
+     * Marca la batalla como finalizada.
+     */
+    public void finalizar() {
+        this.batallaTerminada = true;
+    }
+    
+    /**
+     * Avanza al siguiente turno si la batalla no ha terminado.
+     */
+    public void siguienteTurno() {
+        if (!batallaTerminada) {
+            turnoActual++;
+        }
+    }
 
 }
